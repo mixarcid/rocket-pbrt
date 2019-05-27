@@ -3,4 +3,6 @@ src/build
 src/bin
 src/objs
 .sconsign.dblite
-build/**
+build/*
+*.swp
+.DS_Store

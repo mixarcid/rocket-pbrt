@@ -518,12 +518,12 @@ class FourierBSDF : public BxDF {
 
 class IceBSDF : public BxDF {
   public:
-    IceBSDF() : BxDF(BSDF_TRANSMISSION) {}
-  //Spectrum f(const Spectrum &Rd, const Spectrum &Rs,
-  //	       MicrofacetDistribution *distrib) const;
+    IceBSDF() : BxDF(BxDFType(BSDF_REFLECTION | BSDF_TRANSMISSION | BSDF_SPECULAR)) {}
+    Spectrum f(const Vector3f &wo, const Vector3f &wi) const { return Spectrum(0.); }
     Spectrum Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
                       Float *pdf, BxDFType *sampledType) const;
-  //Float Pdf(const Vector3f &wo, const Vector3f &wi) const;
+    Float Pdf(const Vector3f &wo, const Vector3f &wi) const { return 0.; }
+    std::string ToString() const { return "ugh"; }
 };
 
 // BSDF Inline Method Definitions
