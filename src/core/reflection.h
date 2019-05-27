@@ -514,6 +514,16 @@ class FourierBSDF : public BxDF {
     // FourierBSDF Private Data
     const FourierBSDFTable &bsdfTable;
     const TransportMode mode;
+}; 
+
+class IceBSDF : public BxDF {
+  public:
+    IceBSDF() : BxDF(BSDF_TRANSMISSION) {}
+  //Spectrum f(const Spectrum &Rd, const Spectrum &Rs,
+  //	       MicrofacetDistribution *distrib) const;
+    Spectrum Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
+                      Float *pdf, BxDFType *sampledType) const;
+  //Float Pdf(const Vector3f &wo, const Vector3f &wi) const;
 };
 
 // BSDF Inline Method Definitions

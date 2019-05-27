@@ -375,6 +375,15 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
     return CatmullRomWeights(nMu, mu, cosTheta, offset, weights);
 }
 
+Spectrum IceBSDF::Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
+			     Float *pdf, BxDFType *sampledType) const {
+  Vector3f randVec(rand()/(float)RAND_MAX, rand()/(float)RAND_MAX, rand()/(float)RAND_MAX);
+  Vector3f normal = Cross(wo, randVec);
+  *wi = Normalize(wo) + Normalize(normal)*tan(Radians(22));
+  Spectrum ft = Spectrum(1.);
+  return ft;
+}
+  
 Spectrum BxDF::Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
                         Float *pdf, BxDFType *sampledType) const {
     // Cosine-sample the hemisphere, flipping the direction if necessary
