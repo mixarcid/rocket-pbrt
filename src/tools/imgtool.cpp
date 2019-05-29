@@ -84,6 +84,34 @@ makesky options:
     exit(1);
 }
 
+int dirmap(int argc, char *argv[]) {
+  
+  const char *outfile = "dirmap.exr";
+  int resolution = 2048;
+  int nTheta = resolution, nPhi = 2 * nTheta;
+  std::vector<Float> img(3 * nTheta * nPhi, 0.f);
+  
+  ParallelInit();
+  ParallelFor([&](int64_t t) {
+		Float theta = float(t + 0.5) / nTheta * Pi;
+		for (int p = 0; p < nPhi; ++p) {
+		  Float phi = float(p + 0.5) / nPhi * 2. * Pi;
+		  
+		  // Vector corresponding to the direction for this pixel.
+		  Vector3f v(std::cos(phi) * std::sin(theta), std::cos(theta),
+			     std::sin(phi) * std::sin(theta));
+		  for (int i=0; i<3; ++i) {
+		    img[3 * (t * nPhi + p) + i] = v[i];
+		  }
+		}
+	      }, nTheta, 32);
+  
+  WriteImage(outfile, (Float *)&img[0], Bounds2i({0, 0}, {nPhi, nTheta}),
+	     {nPhi, nTheta});
+  ParallelCleanup();
+  return 0;
+}
+
 int makesky(int argc, char *argv[]) {
     const char *outfile = "sky.exr";
     float albedo = 0.5;
@@ -779,6 +807,8 @@ int main(int argc, char *argv[]) {
         return info(argc - 2, argv + 2);
     else if (!strcmp(argv[1], "makesky"))
         return makesky(argc - 2, argv + 2);
+    else if (!strcmp(argv[1], "dirmap"))
+        return dirmap(argc - 2, argv + 2);
     else
         usage("unknown command \"%s\"", argv[1]);
 
