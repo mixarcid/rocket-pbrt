@@ -87,10 +87,12 @@ makesky options:
 int dirmap(int argc, char *argv[]) {
   
   const char *outfile = "dirmap.exr";
-  int resolution = 2048;
-  int nTheta = resolution, nPhi = 2 * nTheta;
+  int resolution = 256;
+  int nTheta = resolution;
+  int nPhi = 2 * nTheta;
+
   std::vector<Float> img(3 * nTheta * nPhi, 0.f);
-  
+
   ParallelInit();
   ParallelFor([&](int64_t t) {
 		Float theta = float(t + 0.5) / nTheta * Pi;
@@ -98,11 +100,13 @@ int dirmap(int argc, char *argv[]) {
 		  Float phi = float(p + 0.5) / nPhi * 2. * Pi;
 		  
 		  // Vector corresponding to the direction for this pixel.
-		  Vector3f v(std::cos(phi) * std::sin(theta), std::cos(theta),
-			     std::sin(phi) * std::sin(theta));
-		  for (int i=0; i<3; ++i) {
-		    img[3 * (t * nPhi + p) + i] = v[i];
-		  }
+          // +Y is "up" here
+		  // Vector3f v(std::cos(phi) * std::sin(theta), std::cos(theta),
+		  //     std::sin(phi) * std::sin(theta));
+
+          img[3 * (t * nPhi + p) + 0] = 1;
+          img[3 * (t * nPhi + p) + 1] = theta;
+          img[3 * (t * nPhi + p) + 2] = phi;
 		}
 	      }, nTheta, 32);
   
