@@ -63,11 +63,11 @@ static void extendedGCD(uint64_t a, uint64_t b, int64_t *x, int64_t *y) {
 
 // HaltonSampler Method Definitions
 HaltonSampler::HaltonSampler(int samplesPerPixel, const Bounds2i &sampleBounds,
-                             bool sampleAtPixelCenter)
+                             bool sampleAtPixelCenter, int seed)
     : GlobalSampler(samplesPerPixel), sampleAtPixelCenter(sampleAtPixelCenter) {
     // Generate random digit permutations for Halton sampler
     if (radicalInversePermutations.empty()) {
-        RNG rng;
+        RNG rng(seed);
         radicalInversePermutations = ComputeRadicalInversePermutations(rng);
     }
 
@@ -135,7 +135,8 @@ HaltonSampler *CreateHaltonSampler(const ParamSet &params,
     int nsamp = params.FindOneInt("pixelsamples", 16);
     if (PbrtOptions.quickRender) nsamp = 1;
     bool sampleAtCenter = params.FindOneBool("samplepixelcenter", false);
-    return new HaltonSampler(nsamp, sampleBounds, sampleAtCenter);
+    int seed = params.FindOneInt("seed", 0);
+    return new HaltonSampler(nsamp, sampleBounds, sampleAtCenter, seed);
 }
 
 }  // namespace pbrt
