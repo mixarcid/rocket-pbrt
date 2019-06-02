@@ -105,14 +105,53 @@ int dirmap(int argc, char *argv[]) {
 		  //     std::sin(phi) * std::sin(theta));
 
           img[3 * (t * nPhi + p) + 0] = 1;
-          img[3 * (t * nPhi + p) + 1] = theta;
-          img[3 * (t * nPhi + p) + 2] = phi;
+          img[3 * (t * nPhi + p) + 1] = theta / Pi;
+          img[3 * (t * nPhi + p) + 2] = phi / (Pi * 2);
 		}
 	      }, nTheta, 32);
   
   WriteImage(outfile, (Float *)&img[0], Bounds2i({0, 0}, {nPhi, nTheta}),
 	     {nPhi, nTheta});
   ParallelCleanup();
+  return 0;
+}
+
+int undirmap(int argc, char *argv[]) {
+  const char *outfile = "undirmap.exr";
+  int resolution = 256;
+  int nTheta = resolution;
+  int nPhi = 2 * nTheta;
+
+  std::vector<Float> out(3 * nTheta * nPhi, 0.f);
+
+  const char *filename[argc];
+  Point2i res[argc];
+
+  std::unique_ptr<RGBSpectrum[]> imgs[argc];
+  for (int i = 0; i < argc; i++) {
+    std::cout << "Reading image " << i << std::endl;
+    imgs[i] = ReadImage(argv[i], &res[i]);
+
+
+    for (int x = 0; x < res[i].x; x++) {
+      for (int y = 0; y < res[i].y; y++) {
+        RGBSpectrum rgb = imgs[i][y * res[i].x + x];
+
+        Float r = rgb[0];
+        if (r > 0) {
+          int t = rgb[1] / r * nTheta;
+          int p = rgb[2] / r * nPhi;
+          out[3 * (t * nPhi + p) + 0] += r;
+//        out[3 * (t * nPhi + p) + 1] += rgb[1];
+//        out[3 * (t * nPhi + p) + 2] += rgb[2];
+        }
+      }
+    }
+  }
+
+  WriteImage(outfile, (Float *)&out[0], Bounds2i({0, 0}, {nPhi, nTheta}),
+    {nPhi, nTheta});
+
   return 0;
 }
 
@@ -813,6 +852,8 @@ int main(int argc, char *argv[]) {
         return makesky(argc - 2, argv + 2);
     else if (!strcmp(argv[1], "dirmap"))
         return dirmap(argc - 2, argv + 2);
+    else if (!strcmp(argv[1], "undirmap"))
+        return undirmap(argc - 2, argv + 2);
     else
         usage("unknown command \"%s\"", argv[1]);
 
