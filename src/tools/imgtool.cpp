@@ -84,11 +84,12 @@ makesky options:
     exit(1);
 }
 
+#define DIRMAP_RESOLUTION 1024
+
 int dirmap(int argc, char *argv[]) {
   
   const char *outfile = "dirmap.exr";
-  int resolution = 256;
-  int nTheta = resolution;
+  int nTheta = DIRMAP_RESOLUTION;
   int nPhi = 2 * nTheta;
 
   std::vector<Float> img(3 * nTheta * nPhi, 0.f);
@@ -118,8 +119,7 @@ int dirmap(int argc, char *argv[]) {
 
 int undirmap(int argc, char *argv[]) {
   const char *outfile = argc == 0 ? "undirmap.exr" : argv[0];
-  int resolution = 256;
-  int nTheta = resolution;
+  int nTheta = DIRMAP_RESOLUTION;
   int nPhi = 2 * nTheta;
 
   std::vector<Float> out(3 * nTheta * nPhi, 0.f);
@@ -148,9 +148,11 @@ int undirmap(int argc, char *argv[]) {
         if (r > 0) {
           int t = rgb[1] / r * nTheta;
           int p = rgb[2] / r * nPhi;
-          if (std::abs(t - nTheta / 2) + std::abs(p - nPhi / 2) < 2) continue;
-          if (rgb[1]/r < 0.25  || rgb[1]/r > 0.75)  continue;
-          if (rgb[2]/r < 0.375 || rgb[2]/r > 0.625) continue;
+
+//        if (std::abs(t - nTheta / 2) + std::abs(p - nPhi / 2) < 2) continue;
+//        if (rgb[1]/r < 0.25  || rgb[1]/r > 0.75)  continue;
+//        if (rgb[2]/r < 0.375 || rgb[2]/r > 0.625) continue;
+
           out[3 * (t * nPhi + p) + 0] += r * 0.001;
           total += r;
           out[3 * (t * nPhi + p) + 1] += rgb[1] * 0.001;
@@ -256,7 +258,7 @@ int makesky(int argc, char *argv[]) {
 
             if (gamma <= 0.5 * Pi / 180) {
               for (int c = 0; c < num_channels; ++c) {
-                img[3 * (t * nPhi + p) + c / 3] += 10.;
+                img[3 * (t * nPhi + p) + c / 3] += 100.;
               }
               continue;
             }

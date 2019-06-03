@@ -399,7 +399,7 @@ Spectrum IceBSDF::Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
   Float phi   = (out[0] - 0.5) * 360;
   Float theta = (out[1] - 0.5) * 180;
 
-  *pdf = 1.;
+  *pdf = 1.0;
 
   Vector3f x, y;
   CoordinateSystem(-wo, &y, &x);

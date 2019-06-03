@@ -520,10 +520,14 @@ class FourierBSDF : public BxDF {
 class IceBSDF : public BxDF {
   public:
     IceBSDF(Distribution2D* d) : BxDF(BxDFType(BSDF_REFLECTION | BSDF_TRANSMISSION | BSDF_SPECULAR)), distr(d) {}
-    Spectrum f(const Vector3f &wo, const Vector3f &wi) const { return Spectrum(0.); }
+    Spectrum f(const Vector3f &wo, const Vector3f &wi) const {
+      return Spectrum(1.);
+    }
     Spectrum Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
                       Float *pdf, BxDFType *sampledType) const;
-    Float Pdf(const Vector3f &wo, const Vector3f &wi) const { return 0.; }
+    Float Pdf(const Vector3f &wo, const Vector3f &wi) const {
+      return 1.;
+    }
     std::string ToString() const { return "ugh"; }
   private:
     Distribution2D* distr;
