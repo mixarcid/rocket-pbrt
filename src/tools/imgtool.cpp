@@ -117,7 +117,7 @@ int dirmap(int argc, char *argv[]) {
 }
 
 int undirmap(int argc, char *argv[]) {
-  const char *outfile = "undirmap.exr";
+  const char *outfile = argc == 0 ? "undirmap.exr" : argv[0];
   int resolution = 256;
   int nTheta = resolution;
   int nPhi = 2 * nTheta;
@@ -125,29 +125,42 @@ int undirmap(int argc, char *argv[]) {
   std::vector<Float> out(3 * nTheta * nPhi, 0.f);
 
   const char *filename[argc];
-  Point2i res[argc];
+  Point2i res;
 
-  std::unique_ptr<RGBSpectrum[]> imgs[argc];
-  for (int i = 0; i < argc; i++) {
-    std::cout << "Reading image " << i << std::endl;
-    imgs[i] = ReadImage(argv[i], &res[i]);
+  std::unique_ptr<RGBSpectrum[]> imgs;
+  Float total = 0;
+
+  std::string input;
+  while (std::getline(std::cin, input)) {
+    std::cout << "reading " << input << std::endl;
+    imgs = ReadImage(input, &res);
+
+//for (int i = 0; i < argc; i++) {
+//  std::cout << "Reading image " << i << std::endl;
+//  imgs = ReadImage(argv[i], &res);
 
 
-    for (int x = 0; x < res[i].x; x++) {
-      for (int y = 0; y < res[i].y; y++) {
-        RGBSpectrum rgb = imgs[i][y * res[i].x + x];
+    for (int x = 0; x < res.x; x++) {
+      for (int y = 0; y < res.y; y++) {
+        RGBSpectrum rgb = imgs[y * res.x + x];
 
         Float r = rgb[0];
         if (r > 0) {
           int t = rgb[1] / r * nTheta;
           int p = rgb[2] / r * nPhi;
-          out[3 * (t * nPhi + p) + 0] += r;
-//        out[3 * (t * nPhi + p) + 1] += rgb[1];
-//        out[3 * (t * nPhi + p) + 2] += rgb[2];
+          if (std::abs(t - nTheta / 2) + std::abs(p - nPhi / 2) < 2) continue;
+          if (rgb[1]/r < 0.25  || rgb[1]/r > 0.75)  continue;
+          if (rgb[2]/r < 0.375 || rgb[2]/r > 0.625) continue;
+          out[3 * (t * nPhi + p) + 0] += r * 0.001;
+          total += r;
+          out[3 * (t * nPhi + p) + 1] += rgb[1] * 0.001;
+          out[3 * (t * nPhi + p) + 2] += rgb[2] * 0.001;
         }
       }
     }
   }
+  out[3 * (nTheta * nPhi / 2 + nPhi / 2)] = total / 10000;
+  std::cout << "total: " << total << std::endl;
 
   WriteImage(outfile, (Float *)&out[0], Bounds2i({0, 0}, {nPhi, nTheta}),
     {nPhi, nTheta});
@@ -240,6 +253,13 @@ int makesky(int argc, char *argv[]) {
             // direction.
             Float gamma = std::acos(Clamp(Dot(v, sunDir), -1, 1));
             CHECK(gamma >= 0 && gamma <= Pi);
+
+            if (gamma <= 0.5 * Pi / 180) {
+              for (int c = 0; c < num_channels; ++c) {
+                img[3 * (t * nPhi + p) + c / 3] += 10.;
+              }
+              continue;
+            }
 
             for (int c = 0; c < num_channels; ++c) {
                 float val = arhosekskymodel_solar_radiance(

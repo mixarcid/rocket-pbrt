@@ -15,11 +15,12 @@ void IceMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
 					     TransportMode mode,
 					     bool allowMultipleLobes) const {
   si->bsdf = ARENA_ALLOC(arena, BSDF)(*si);
-  si->bsdf->Add(ARENA_ALLOC(arena, IceBSDF)());
+  si->bsdf->Add(ARENA_ALLOC(arena, IceBSDF)(distr));
 }
 
 IceMaterial *CreateIceMaterial(const TextureParams &mp) {
-    return new IceMaterial();
+    std::string mapName = mp.FindFilename("mapname", "");
+    return new IceMaterial(mapName);
 }
 
 }  // namespace pbrt

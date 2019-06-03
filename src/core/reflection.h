@@ -44,6 +44,7 @@
 #include "microfacet.h"
 #include "shape.h"
 #include "spectrum.h"
+#include "sampling.h"
 
 namespace pbrt {
 
@@ -518,12 +519,14 @@ class FourierBSDF : public BxDF {
 
 class IceBSDF : public BxDF {
   public:
-    IceBSDF() : BxDF(BxDFType(BSDF_REFLECTION | BSDF_TRANSMISSION | BSDF_SPECULAR)) {}
+    IceBSDF(Distribution2D* d) : BxDF(BxDFType(BSDF_REFLECTION | BSDF_TRANSMISSION | BSDF_SPECULAR)), distr(d) {}
     Spectrum f(const Vector3f &wo, const Vector3f &wi) const { return Spectrum(0.); }
     Spectrum Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
                       Float *pdf, BxDFType *sampledType) const;
     Float Pdf(const Vector3f &wo, const Vector3f &wi) const { return 0.; }
     std::string ToString() const { return "ugh"; }
+  private:
+    Distribution2D* distr;
 };
 
 // BSDF Inline Method Definitions

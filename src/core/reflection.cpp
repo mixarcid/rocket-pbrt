@@ -378,6 +378,7 @@ bool FourierBSDFTable::GetWeightsAndOffset(Float cosTheta, int *offset,
 Spectrum IceBSDF::Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
 			     Float *pdf, BxDFType *sampledType) const {
 
+/*
   if (rand() % 2 == 0) {
     *wi = - wo;
     *pdf = 1.;
@@ -387,11 +388,25 @@ Spectrum IceBSDF::Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
   Vector3f randVec(rand()/(float)RAND_MAX - 0.5, rand()/(float)RAND_MAX - 0.5, rand()/(float)RAND_MAX - 0.5);
   Vector3f normal = Cross(wo, randVec);
   *wi = - (Normalize(wo) + Normalize(normal)*tan(Radians(22)));
-  Spectrum ft = Spectrum(1.);
 
   *sampledType = BxDFType(BSDF_TRANSMISSION | BSDF_SPECULAR);
   *pdf = 1.;
   return Spectrum(1.); // ft / AbsCosTheta(*wi);
+  */
+
+  Point2f out = distr->SampleContinuous(u, pdf);
+
+  Float phi   = (out[0] - 0.5) * 360;
+  Float theta = (out[1] - 0.5) * 180;
+
+  *pdf = 1.;
+
+  Vector3f x, y;
+  CoordinateSystem(-wo, &y, &x);
+  *wi = (Rotate(phi, y) * Rotate(theta, x)) (-wo);
+
+  *sampledType = BxDFType(BSDF_TRANSMISSION | BSDF_SPECULAR);
+  return Spectrum(1.);
 }
   
 Spectrum BxDF::Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
