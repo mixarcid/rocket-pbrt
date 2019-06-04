@@ -149,14 +149,26 @@ int undirmap(int argc, char *argv[]) {
           int t = rgb[1] / r * nTheta;
           int p = rgb[2] / r * nPhi;
 
-//        if (std::abs(t - nTheta / 2) + std::abs(p - nPhi / 2) < 2) continue;
+          float dist = std::sqrt(
+            std::abs(t - nTheta / 2) * std::abs(t - nTheta / 2) +
+            std::abs(p - nPhi / 2) * std::abs(p - nPhi / 2)
+          );
+
+//        if (std::abs(t - nTheta / 2) + std::abs(p - nPhi / 2) < 5) continue;
+
+          if (dist < 2) continue;
+
+          float corona_radius = 25. / 180. * nTheta;
+          if (dist > corona_radius) r *=  corona_radius * corona_radius * corona_radius / dist / dist / dist;
+
+
 //        if (rgb[1]/r < 0.25  || rgb[1]/r > 0.75)  continue;
 //        if (rgb[2]/r < 0.375 || rgb[2]/r > 0.625) continue;
 
           out[3 * (t * nPhi + p) + 0] += r * 0.001;
           total += r;
-          out[3 * (t * nPhi + p) + 1] += rgb[1] * 0.001;
-          out[3 * (t * nPhi + p) + 2] += rgb[2] * 0.001;
+//        out[3 * (t * nPhi + p) + 1] += rgb[1] * 0.001;
+//        out[3 * (t * nPhi + p) + 2] += rgb[2] * 0.001;
         }
       }
     }
@@ -256,9 +268,9 @@ int makesky(int argc, char *argv[]) {
             Float gamma = std::acos(Clamp(Dot(v, sunDir), -1, 1));
             CHECK(gamma >= 0 && gamma <= Pi);
 
-            if (gamma <= 0.5 * Pi / 180) {
+            if (gamma <= 2.5 * Pi / 180) {
               for (int c = 0; c < num_channels; ++c) {
-                img[3 * (t * nPhi + p) + c / 3] += 100.;
+                img[3 * (t * nPhi + p) + c / 3] += 20.;
               }
               continue;
             }
