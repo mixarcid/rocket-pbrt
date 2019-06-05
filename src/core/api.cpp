@@ -114,6 +114,7 @@
 #include "textures/windy.h"
 #include "textures/wrinkled.h"
 #include "media/grid.h"
+#include "media/emissive.h"
 #include "media/homogeneous.h"
 
 #include <map>
@@ -689,9 +690,11 @@ std::shared_ptr<Medium> MakeMedium(const std::string &name,
                                    const ParamSet &paramSet,
                                    const Transform &medium2world) {
     Float sig_a_rgb[3] = {.0011f, .0024f, .014f},
-          sig_s_rgb[3] = {2.55f, 3.21f, 3.77f};
+          sig_s_rgb[3] = {2.55f, 3.21f, 3.77f},
+          Le_rgb[3] = {0.0f, 0.0f, 0.0f};
     Spectrum sig_a = Spectrum::FromRGB(sig_a_rgb),
-             sig_s = Spectrum::FromRGB(sig_s_rgb);
+             sig_s = Spectrum::FromRGB(sig_s_rgb),
+             Le = Spectrum::FromRGB(Le_rgb);
     std::string preset = paramSet.FindOneString("preset", "");
     bool found = GetMediumScatteringProperties(preset, &sig_a, &sig_s);
     if (preset != "" && !found)
@@ -699,11 +702,12 @@ std::shared_ptr<Medium> MakeMedium(const std::string &name,
                 preset.c_str());
     Float scale = paramSet.FindOneFloat("scale", 1.f);
     Float g = paramSet.FindOneFloat("g", 0.0f);
+    Le = paramSet.FindOneSpectrum("Le", Le) * scale;
     sig_a = paramSet.FindOneSpectrum("sigma_a", sig_a) * scale;
     sig_s = paramSet.FindOneSpectrum("sigma_s", sig_s) * scale;
     Medium *m = NULL;
     if (name == "homogeneous") {
-        m = new HomogeneousMedium(sig_a, sig_s, g);
+        m = new HomogeneousMedium(sig_a, sig_s, Le, g);
     } else if (name == "heterogeneous") {
         int nitems;
         const Float *data = paramSet.FindFloat("density", &nitems);
@@ -727,8 +731,31 @@ std::shared_ptr<Medium> MakeMedium(const std::string &name,
                                 Scale(p1.x - p0.x, p1.y - p0.y, p1.z - p0.z);
         m = new GridDensityMedium(sig_a, sig_s, g, nx, ny, nz,
                                   medium2world * data2Medium, data);
+    } else if (name == "emissive") {
+        int nitems;
+        const Float *data = paramSet.FindFloat("density", &nitems);
+        if (!data) {
+            Error("No \"density\" values provided for heterogeneous medium?");
+            return NULL;
+        }
+        int nx = paramSet.FindOneInt("nx", 1);
+        int ny = paramSet.FindOneInt("ny", 1);
+        int nz = paramSet.FindOneInt("nz", 1);
+        Point3f p0 = paramSet.FindOnePoint3f("p0", Point3f(0.f, 0.f, 0.f));
+        Point3f p1 = paramSet.FindOnePoint3f("p1", Point3f(1.f, 1.f, 1.f));
+        if (nitems != nx * ny * nz) {
+            Error(
+                "EmissiveMedium has %d density values; expected nx*ny*nz = "
+                "%d",
+                nitems, nx * ny * nz);
+            return NULL;
+        }
+        Transform data2Medium = Translate(Vector3f(p0)) *
+                                Scale(p1.x - p0.x, p1.y - p0.y, p1.z - p0.z);
+        m = new EmissiveMedium(sig_a, sig_s, Le, g, nx, ny, nz,
+			       medium2world * data2Medium, data);
     } else
-        Warning("Medium \"%s\" unknown.", name.c_str());
+      Warning("Medium \"%s\" unknown.", name.c_str());
     paramSet.ReportUnused();
     return std::shared_ptr<Medium>(m);
 }

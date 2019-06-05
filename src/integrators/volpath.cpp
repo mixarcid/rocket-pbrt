@@ -76,7 +76,10 @@ Spectrum VolPathIntegrator::Li(const RayDifferential &r, const Scene &scene,
 
         // Sample the participating medium, if present
         MediumInteraction mi;
-        if (ray.medium) beta *= ray.medium->Sample(ray, sampler, arena, &mi);
+        if (ray.medium) {
+	  beta *= ray.medium->Sample(ray, sampler, arena, &mi);
+	  L += ray.medium->SampleLe(ray, sampler, arena, &mi);
+	}
         if (beta.IsBlack()) break;
 
         // Handle an interaction with a medium or a surface

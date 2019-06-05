@@ -80,6 +80,9 @@ class Medium {
     virtual Spectrum Sample(const Ray &ray, Sampler &sampler,
                             MemoryArena &arena,
                             MediumInteraction *mi) const = 0;
+    virtual Spectrum SampleLe(const Ray &ray, Sampler &sampler,
+                            MemoryArena &arena,
+			    MediumInteraction *mi) const { return Spectrum(0); }
 };
 
 // HenyeyGreenstein Declarations
