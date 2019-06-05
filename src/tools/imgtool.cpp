@@ -117,6 +117,31 @@ int dirmap(int argc, char *argv[]) {
   return 0;
 }
 
+int checkerboard(int argc, char *argv[]) {
+  const char *outfile = "checkerboard.exr";
+  int nx = 6;
+  int ny = 6;
+  int size = 50;
+  std::vector<Float> img(3 * nx * size * ny * size, 0.f);
+
+  for (int x = 0; x < nx * size; x++) {
+    for (int y = 0; y < ny * size; y++) {
+      if ( ((x / size) + (y / size)) % 2 == 0 || (y / size) == ny - 1) {
+        img[ 3 * (y * nx * size + x) + 0 ] = 1;
+        img[ 3 * (y * nx * size + x) + 1 ] = 0;
+        img[ 3 * (y * nx * size + x) + 2 ] = 0;
+      } else {
+        img[ 3 * (y * nx * size + x) + 0 ] = 1;
+        img[ 3 * (y * nx * size + x) + 1 ] = 1;
+        img[ 3 * (y * nx * size + x) + 2 ] = 1;
+      }
+    }
+  }
+  WriteImage(outfile, (Float *)&img[0], Bounds2i({0, 0}, {nx * size, ny * size}),
+	     {nx * size, ny * size});
+  return 0;
+}
+
 int undirmap(int argc, char *argv[]) {
   const char *outfile = argc == 0 ? "undirmap.exr" : argv[0];
   int nTheta = DIRMAP_RESOLUTION;
@@ -888,6 +913,8 @@ int main(int argc, char *argv[]) {
         return dirmap(argc - 2, argv + 2);
     else if (!strcmp(argv[1], "undirmap"))
         return undirmap(argc - 2, argv + 2);
+    else if (!strcmp(argv[1], "checkerboard"))
+        return checkerboard(argc - 2, argv + 2);
     else
         usage("unknown command \"%s\"", argv[1]);
 
