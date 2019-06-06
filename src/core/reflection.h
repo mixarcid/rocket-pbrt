@@ -519,7 +519,7 @@ class FourierBSDF : public BxDF {
 
 class IceBSDF : public BxDF {
   public:
-    IceBSDF(Distribution2D* d) : BxDF(BxDFType(BSDF_REFLECTION | BSDF_TRANSMISSION | BSDF_SPECULAR)), distr(d) {}
+    IceBSDF(Distribution1D* d1, Distribution2D* d2) : BxDF(BxDFType(BSDF_REFLECTION | BSDF_TRANSMISSION | BSDF_SPECULAR)), distr1(d1), distr2(d2) {}
     Spectrum f(const Vector3f &wo, const Vector3f &wi) const {
       return Spectrum(1.);
     }
@@ -530,7 +530,8 @@ class IceBSDF : public BxDF {
     }
     std::string ToString() const { return "ugh"; }
   private:
-    Distribution2D* distr;
+    Distribution1D* distr1;
+    Distribution2D* distr2;
 };
 
 // BSDF Inline Method Definitions

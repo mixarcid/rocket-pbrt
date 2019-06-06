@@ -184,7 +184,7 @@ int undirmap(int argc, char *argv[]) {
           if (dist < 2) continue;
 
           float corona_radius = 25. / 180. * nTheta;
-          if (dist > corona_radius) r *=  corona_radius * corona_radius * corona_radius / dist / dist / dist;
+          // if (dist > corona_radius) r *=  corona_radius * corona_radius * corona_radius / dist / dist / dist;
 
 
 //        if (rgb[1]/r < 0.25  || rgb[1]/r > 0.75)  continue;
