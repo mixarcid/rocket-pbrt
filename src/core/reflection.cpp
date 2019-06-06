@@ -401,9 +401,16 @@ Spectrum IceBSDF::Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
 
   *pdf = 1.0;
 
+/*
   Vector3f x, y;
   CoordinateSystem(-wo, &y, &x);
   *wi = (Rotate(phi, y) * Rotate(theta, x)) (-wo);
+  */
+
+  Vector3f up(0., 0., 1.);
+  Vector3f left = Cross(up, -wo);
+  up = Cross(left, up);
+  *wi = (Rotate(phi, up) * Rotate(theta, left))(-wo);
 
   *sampledType = BxDFType(BSDF_TRANSMISSION | BSDF_SPECULAR);
   return Spectrum(1.);
