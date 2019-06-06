@@ -15,7 +15,7 @@ void IceMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
 					     TransportMode mode,
 					     bool allowMultipleLobes) const {
   si->bsdf = ARENA_ALLOC(arena, BSDF)(*si);
-  si->bsdf->Add(ARENA_ALLOC(arena, IceBSDF)(distr));
+  si->bsdf->Add(ARENA_ALLOC(arena, IceBSDF)(distr1, distr2));
 }
 
 IceMaterial *CreateIceMaterial(const TextureParams &mp) {

@@ -394,19 +394,41 @@ Spectrum IceBSDF::Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
   return Spectrum(1.); // ft / AbsCosTheta(*wi);
   */
 
-  Point2f out = distr->SampleContinuous(u, pdf);
+  Point2f out = distr2->SampleContinuous(u, pdf);
 
   Float phi   = (out[0] - 0.5) * 360;
   Float theta = (out[1] - 0.5) * 180;
 
   *pdf = 1.0;
 
+/*
   Vector3f x, y;
   CoordinateSystem(-wo, &y, &x);
   *wi = (Rotate(phi, y) * Rotate(theta, x)) (-wo);
+  */
+
+  Vector3f up(0., 0., 1.);
+  Vector3f left = Cross(up, -wo);
+  up = Cross(left, up);
+  *wi = (Rotate(phi, up) * Rotate(theta, left))(-wo);
 
   *sampledType = BxDFType(BSDF_TRANSMISSION | BSDF_SPECULAR);
   return Spectrum(1.);
+
+/*
+  float alpha = Radians(distr1->SampleContinuous(u.x, pdf) * 1024 * 1024 * 2);
+  float theta = u.y * 360;
+
+  Vector3f x, normal;
+  CoordinateSystem(wo, &normal, &x);
+
+  *wi = - (Normalize(wo) + Rotate(theta, wo)(normal) * std::tan(alpha));
+
+  *sampledType = BxDFType(BSDF_TRANSMISSION | BSDF_SPECULAR);
+  *pdf = 1.;
+  return Spectrum(1.);
+  */
+
 }
   
 Spectrum BxDF::Sample_f(const Vector3f &wo, Vector3f *wi, const Point2f &u,
