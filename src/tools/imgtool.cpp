@@ -142,6 +142,13 @@ int checkerboard(int argc, char *argv[]) {
   return 0;
 }
 
+int averagedirmap(int argc, char* argv[]) {
+  const char *infile = argc == 0 ? "undirmap.exr" : argv[0];
+  int nTheta = DIRMAP_RESOLUTION;
+  int nPhi = 2 * nTheta;
+  return 1;
+}
+
 int undirmap(int argc, char *argv[]) {
   const char *outfile = argc == 0 ? "undirmap.exr" : argv[0];
   int nTheta = DIRMAP_RESOLUTION;
@@ -915,6 +922,8 @@ int main(int argc, char *argv[]) {
         return undirmap(argc - 2, argv + 2);
     else if (!strcmp(argv[1], "checkerboard"))
         return checkerboard(argc - 2, argv + 2);
+    else if (!strcmp(argv[1], "averagedirmap"))
+        return averagedirmap(argc - 2, argv + 2);
     else
         usage("unknown command \"%s\"", argv[1]);
 

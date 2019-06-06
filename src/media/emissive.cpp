@@ -24,6 +24,35 @@ Float EmissiveMedium::Density(const Point3f &p) const {
     return Lerp(d.z, d0, d1);
 }
 
+Spectrum EmissiveMedium::getLe(const Point3f &p) const {
+    // Compute voxel coordinates and offsets for _p_
+    Point3f pSamples(p.x * nx - .5f, p.y * ny - .5f, p.z * nz - .5f);
+    Point3i pi = (Point3i)Floor(pSamples);
+    Vector3f d = pSamples - (Point3f)pi;
+
+    Spectrum le1 = LeHelper(pi);
+    Spectrum le2 = LeHelper(pi + Vector3i(1, 0, 0));
+    Spectrum le3 = LeHelper(pi + Vector3i(0, 1, 0));
+    Spectrum le4 = LeHelper(pi + Vector3i(1, 1, 0));
+    Spectrum le5 = LeHelper(pi + Vector3i(0, 0, 1));
+    Spectrum le6 = LeHelper(pi + Vector3i(1, 0, 1));
+    Spectrum le7 = LeHelper(pi + Vector3i(0, 1, 1));
+    Spectrum le8 = LeHelper(pi + Vector3i(1, 1, 1));
+
+    Spectrum ret;
+    for (int i=0; i<3; ++i) {
+      Float d00 = Lerp(d.x, le1[i], le2[i]);
+      Float d10 = Lerp(d.x, le3[i], le4[i]);
+      Float d01 = Lerp(d.x, le5[i], le6[i]);
+      Float d11 = Lerp(d.x, le7[i], le8[i]);
+      Float d0 = Lerp(d.y, d00, d10);
+      Float d1 = Lerp(d.y, d01, d11);
+      ret[i] = Lerp(d.z, d0, d1);
+    }
+    return ret;
+}
+
+  
 Spectrum EmissiveMedium::Sample(const Ray &rWorld, Sampler &sampler,
                                    MemoryArena &arena,
                                    MediumInteraction *mi) const {
@@ -80,7 +109,7 @@ Spectrum EmissiveMedium::Tr(const Ray &rWorld, Sampler &sampler) const {
     return Spectrum(Tr);
 }
 
-const int N_ITERS = 1000;
+const int N_ITERS = 100;
 Spectrum EmissiveMedium::SampleLe(const Ray &rWorld, Sampler &sampler,
 				  MemoryArena &arena,
 				  MediumInteraction *mi) const {
@@ -90,15 +119,16 @@ Spectrum EmissiveMedium::SampleLe(const Ray &rWorld, Sampler &sampler,
   const Bounds3f b(Point3f(0, 0, 0), Point3f(1, 1, 1));
   Float tMin, tMax;
   if (!b.IntersectP(ray, &tMin, &tMax)) return Spectrum(0.f);
-  tMax = tMin + sampler.Get1D()*(tMax-tMin);
+  //tMax = tMin + sampler.Get1D()*(tMax - tMin);
     
-  Float dt = ray.d.Length()*(tMax-tMin)/float(N_ITERS);
+  Float dt = (tMax-tMin)/float(N_ITERS);
+  Float dd = dt*ray.d.Length();
   Spectrum L(0);
   for (int i=0; i<N_ITERS; ++i) {
     Float t = tMin + dt*i;
     Float density = Density(ray(t));
     Float d = std::max((Float)0, density * invMaxDensity);
-    L = (sigma_t*L + Le*d)*dt;
+    L = L - sigma_t*(1-d)*L*dd + (getLe(ray(t))*d)*dd;
   }
   return L;
 }

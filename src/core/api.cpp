@@ -702,11 +702,11 @@ std::shared_ptr<Medium> MakeMedium(const std::string &name,
                 preset.c_str());
     Float scale = paramSet.FindOneFloat("scale", 1.f);
     Float g = paramSet.FindOneFloat("g", 0.0f);
-    Le = paramSet.FindOneSpectrum("Le", Le) * scale;
     sig_a = paramSet.FindOneSpectrum("sigma_a", sig_a) * scale;
     sig_s = paramSet.FindOneSpectrum("sigma_s", sig_s) * scale;
     Medium *m = NULL;
     if (name == "homogeneous") {
+        Le = paramSet.FindOneSpectrum("Le", Le) * scale;
         m = new HomogeneousMedium(sig_a, sig_s, Le, g);
     } else if (name == "heterogeneous") {
         int nitems;
@@ -733,6 +733,7 @@ std::shared_ptr<Medium> MakeMedium(const std::string &name,
                                   medium2world * data2Medium, data);
     } else if (name == "emissive") {
         int nitems;
+	const Float *le = paramSet.FindFloat("Le", &nitems);
         const Float *data = paramSet.FindFloat("density", &nitems);
         if (!data) {
             Error("No \"density\" values provided for heterogeneous medium?");
@@ -752,8 +753,8 @@ std::shared_ptr<Medium> MakeMedium(const std::string &name,
         }
         Transform data2Medium = Translate(Vector3f(p0)) *
                                 Scale(p1.x - p0.x, p1.y - p0.y, p1.z - p0.z);
-        m = new EmissiveMedium(sig_a, sig_s, Le, g, nx, ny, nz,
-			       medium2world * data2Medium, data);
+        m = new EmissiveMedium(sig_a, sig_s, g, nx, ny, nz,
+			       medium2world * data2Medium, data, le);
     } else
       Warning("Medium \"%s\" unknown.", name.c_str());
     paramSet.ReportUnused();

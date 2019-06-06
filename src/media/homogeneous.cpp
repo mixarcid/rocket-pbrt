@@ -79,7 +79,7 @@ const int N_ITERS = 1000;
 Spectrum HomogeneousMedium::SampleLe(const Ray &ray, Sampler &sampler,
 				     MemoryArena &arena,
 				     MediumInteraction *mi) const {
-  Float tMax = sampler.Get1D()*ray.tMax;
+  Float tMax = ray.tMax;
   Float dt = ray.d.Length()*tMax/float(N_ITERS);
   Spectrum L(0);
   for (int i=0; i<N_ITERS; ++i) {

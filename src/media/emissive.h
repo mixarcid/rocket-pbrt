@@ -18,19 +18,20 @@ namespace pbrt {
 class EmissiveMedium : public Medium {
   public:
     // EmissiveMedium Public Methods
-    EmissiveMedium(const Spectrum &sigma_a, const Spectrum &sigma_s, const Spectrum &Le, Float g,
+    EmissiveMedium(const Spectrum &sigma_a, const Spectrum &sigma_s, Float g,
                       int nx, int ny, int nz, const Transform &mediumToWorld,
-                      const Float *d)
+		      const Float *d, const Float* le)
         : sigma_a(sigma_a),
           sigma_s(sigma_s),
-          Le(Le),
           g(g),
           nx(nx),
           ny(ny),
           nz(nz),
           WorldToMedium(Inverse(mediumToWorld)),
-          density(new Float[nx * ny * nz]) {
-        memcpy((Float *)density.get(), d, sizeof(Float) * nx * ny * nz);
+          density(new Float[nx * ny * nz]),
+          Le(new Spectrum[nx * ny * nz]) {
+        memcpy((Float *) density.get(), d, sizeof(Float) * nx * ny * nz);
+	memcpy((Spectrum *) Le.get(), le, sizeof(Spectrum) * nx * ny * nz);
         // Precompute values for Monte Carlo sampling of _EmissiveMedium_
         sigma_t = (sigma_a + sigma_s)[0];
         if (Spectrum(sigma_t) != sigma_a + sigma_s)
@@ -49,6 +50,12 @@ class EmissiveMedium : public Medium {
         if (!InsideExclusive(p, sampleBounds)) return 0;
         return density[(p.z * ny + p.y) * nx + p.x];
     }
+    Spectrum getLe(const Point3f &p) const;
+    Spectrum LeHelper(const Point3i &p) const {
+      Bounds3i sampleBounds(Point3i(0, 0, 0), Point3i(nx, ny, nz));
+        if (!InsideExclusive(p, sampleBounds)) return 0;
+        return Le[(p.z * ny + p.y) * nx + p.x];
+    }
     Spectrum Sample(const Ray &ray, Sampler &sampler, MemoryArena &arena,
                     MediumInteraction *mi) const;
     Spectrum Tr(const Ray &ray, Sampler &sampler) const;
@@ -57,11 +64,12 @@ class EmissiveMedium : public Medium {
 
   private:
     // EmissiveMedium Private Data
-    const Spectrum sigma_a, sigma_s, Le;
+    const Spectrum sigma_a, sigma_s;
     const Float g;
     const int nx, ny, nz;
     const Transform WorldToMedium;
     std::unique_ptr<Float[]> density;
+    std::unique_ptr<Spectrum[]> Le;
     Float sigma_t;
     Float invMaxDensity;
 };
